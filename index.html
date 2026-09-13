@@ -16,15 +16,49 @@
 </head>
 
 <body>
-    <header class="header topbar">
-        <div class="repo-input logo">
-            <button class="btn-primary repo-input-button" type="button">Go</button>
-            <div class="repo-input-container">
-                <label>Repo</label>
-                <input type="text" placeholder="Acidicts/RepoWatch" />
+    <template id="commit-list-template">
+        <div class="commit">
+            <div class="commit-pi-chart">
+                <svg class="commit-pi-chart-hitlayer" viewBox="0 0 34 34"></svg>
+                <div class="commit-pi-chart-center">
+                    <div class="commit-pi-chart-center-actions-status"></div>
+                </div>
+                <span class="commit-pi-chart-tooltip"></span>
+            </div>
+            <div class="commit-content">
+                <div class="commit-list-item-header">
+                    <div class="commit-list-item-title"></div>
+                    <div class="commit-list-item-date"></div>
+                </div>
+                <div class="commit-list-item-body">
+                    <div class="commit-list-item-changes">
+                        <div class="commit-list-item-line-changes">
+                            +<span class="commit-list-item-line-changes-added"></span>
+                            -<span class="commit-list-item-line-changes-removed"></span>
+                        </div>
+                        <div class="commit-list-item-file-changed"></div>
+                    </div>
+                    <a href="#" target="_blank" rel="noopener noreferrer" class="commit-list-item-sha"></a>
+                </div>
             </div>
         </div>
-        <div class="settings-button">
+    </template>
+
+    <dialog id="settings-modal">
+        <h2>Settings</h2>
+        <input type="text" id="github_key" placeholder="GitHub Personal Access Token"/>
+        <button id="save-settings" class="btn-primary">Save</button>
+    </dialog>
+
+    <header class="header topbar">
+        <div class="repo-input logo">
+            <button class="btn-primary repo-input-button" type="button" id="repo-input-button">Go</button>
+            <div class="repo-input-container">
+                <label>Repo</label>
+                <input type="text" placeholder="Acidicts/RepoWatch" id="repo_input"/>
+            </div>
+        </div>
+        <div id="settings-button">
             <svg fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414"
                 xmlns="http://www.w3.org/2000/svg" aria-label="settings" viewBox="0 0 32 32"
                 preserveAspectRatio="xMidYMid meet" fill="currentColor" width="2rem" height="2rem">
@@ -36,35 +70,10 @@
 
     <main class="main">
         <div class="focused-commit"></div>
-        <div class="commit-list" id="commit-list">
-            <template id="commit-list-template">
-                <div class="commit">
-                    <div class="commit-pi-chart">
-                        <svg class="commit-pi-chart-hitlayer" viewBox="0 0 34 34"></svg>
-                        <div class="commit-pi-chart-center">
-                            <div class="commit-pi-chart-center-actions-status"></div>
-                        </div>
-                        <span class="commit-pi-chart-tooltip"></span>
-                    </div>
-                    <div class="commit-content">
-                        <div class="commit-list-item-header">
-                            <div class="commit-list-item-title"></div>
-                            <div class="commit-list-item-date"></div>
-                        </div>
-                        <div class="commit-list-item-changes commit-list-item-body">
-                            <div class="commit-list-item-line-changes">
-                                +<span class="commit-list-item-line-changes-added"></span>
-                                -<span class="commit-list-item-line-changes-removed"></span>
-                            </div>
-                            <div class="commit-list-item-file-changed"></div>
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </div>
+        <div class="commit-list" id="commit-list"></div>
     </main>
 </body>
 <footer class="footer"></footer>
-<script src="script.js"></script>
+<script type="module" src="script.js"></script>
 
 </html>

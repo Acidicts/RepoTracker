@@ -9,18 +9,35 @@
     --grey: #cccac2;
 
     --red: #8a4a4a;
+    --aqua: #3d6b7d;
 }
 
 @keyframes pulse {
     0% {
         opacity: 1;
     }
+
     50% {
         opacity: 0.8;
     }
+
     100% {
         opacity: 1;
     }
+}
+
+/* Settings Modal */
+dialog {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 24px;
+    max-width: 400px;
+    width: 90%;
+}
+
+dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
 }
 
 /* Body */
@@ -129,7 +146,7 @@ body {
     opacity: 0.6;
 }
 
-.settings-button {
+#settings-button {
     color: var(--primary-light);
     display: flex;
     align-items: center;
@@ -139,7 +156,7 @@ body {
     transition: background 0.15s, color 0.15s;
 }
 
-.settings-button:hover {
+#settings-button:hover {
     color: var(--bg);
 }
 
@@ -163,12 +180,17 @@ body {
     padding: 18px;
     overflow-y: auto;
 }
+
 .main .commit-list {
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 18px;
+    scrollbar-width: thin;
+    overflow-x: auto;
+    overflow-y: scroll;
 }
+
 .commit-list .commit:nth-child(even) {
     background: var(--page-bg);
 }
@@ -182,11 +204,13 @@ body {
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.15s;
+    max-width: 100%;
 }
 
 .commit:hover {
     background: var(--grey) !important;
     scale: 1.01;
+    transform: translateX(1%);
 }
 
 .commit-pi-chart {
@@ -230,7 +254,8 @@ body {
     padding: 4px 8px;
     border-radius: 4px;
     white-space: nowrap;
-    pointer-events: none; /* tooltip itself never intercepts hover */
+    pointer-events: none;
+    /* tooltip itself never intercepts hover */
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.12s ease, transform 0.12s ease;
@@ -256,9 +281,21 @@ body {
     animation: pulse 1.5s infinite;
 }
 
+.commit-comitter-icon {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: var(--ink);
+    top:  -1px;
+    left: -1px;
+}
+
 .commit-list .commit:nth-child(even) .commit-pi-chart {
     background: var(--bg);
 }
+
 .commit-list .commit:nth-child(even) .commit-pi-chart .commit-pi-chart-center {
     background: var(--page-bg);
 }
@@ -293,6 +330,16 @@ body {
 }
 
 .commit-list-item-body {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 4px;
+}
+
+.commit-list-item-changes {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
     margin: 4px 0 0;
     font-size: 12px;
     color: var(--primary);
@@ -300,17 +347,22 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.commit-list-item-changes {
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
-    margin-top: 4px;
-}
+
 .commit-list-item-line-changes-added {
     color: var(--primary);
 }
+
 .commit-list-item-line-changes-removed {
     color: var(--red);
+}
+
+.commit-list-item-sha {
+    margin-top: 5px;
+    font-size: 11px;
+    color: var(--aqua);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /*#endregion */
