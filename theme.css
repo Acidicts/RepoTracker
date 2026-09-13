@@ -1,0 +1,101 @@
+:root {
+    --ink: #2f3e2e;
+    --primary: #5b7553;
+    --primary-light: #a3b18a;
+    --secondary: #a3b18a;
+    --border: #dad7cd;
+    --border-strong: #c9c6ba;
+    --bg: #f6f5f1;
+
+    --success-bg: #eef1e8;
+    --success-border: #5b7553;
+    --success-text: #2f3e2e;
+
+    --warning-bg: #faf6ea;
+    --warning-border: #c9a961;
+    --warning-text: #5c4d1f;
+
+    --danger-bg: #f7eeea;
+    --danger-border: #b5654a;
+    --danger-text: #5c2d1f;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: var(--bg);
+    border: none;
+    border-radius: 6px;
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background: var(--ink);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary-light);
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background: var(--bg);
+    border-color: var(--primary);
+}
+
+.btn-muted {
+    background: var(--border);
+    color: var(--ink);
+    border: none;
+    border-radius: 6px;
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-muted:hover {
+    background: var(--border-strong);
+}
+
+.card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+}
+
+.alert-success {
+    background: var(--success-bg);
+    border-left: 3px solid var(--success-border);
+    color: var(--success-text);
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-size: 13px;
+}
+
+.alert-warning {
+    background: var(--warning-bg);
+    border-left: 3px solid var(--warning-border);
+    color: var(--warning-text);
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-size: 13px;
+}
+
+.alert-danger {
+    background: var(--danger-bg);
+    border-left: 3px solid var(--danger-border);
+    color: var(--danger-text);
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-size: 13px;
+}

@@ -1,0 +1,325 @@
+:root {
+    --ink: #2f3e2e;
+    --primary: #5b7553;
+    --primary-light: #a3b18a;
+    --secondary: #a3b18a;
+    --border: #dad7cd;
+    --bg: #f6f5f1;
+    --page-bg: #eeece3;
+    --grey: #cccac2;
+
+    --red: #8a4a4a;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Body */
+body {
+    display: grid;
+
+    background-color: var(--page-bg);
+
+    grid-template-rows: 1fr 8fr auto;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+
+    font-family: "Inter", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 800;
+}
+
+/*#region Header */
+.header {
+    display: flex;
+    flex-direction: row;
+    min-height: 0;
+    justify-content: space-between;
+    padding: 0.5rem;
+    align-items: center;
+    margin: 1rem 1rem 0 1rem;
+}
+
+/*#region Topbar */
+.topbar {
+    background: var(--ink);
+    border-radius: 8px;
+    padding: 0 18px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.topbar .logo {
+    color: var(--bg);
+    font-weight: 500;
+}
+
+.topbar .nav-item {
+    color: var(--primary-light);
+    padding: 7px 12px;
+    border-radius: 6px;
+}
+
+.topbar .nav-item-active {
+    background: var(--primary);
+    color: var(--bg);
+}
+
+.topbar .avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: var(--ink);
+}
+
+/* #endregion */
+
+.repo-input {
+    display: flex;
+    flex-direction: row;
+    gap: 2px;
+    align-items: left;
+}
+
+.repo-input-button {
+    border-radius: 6px 0 0 6px !important;
+    box-shadow: 0 0 2px var(--primary-light) !important;
+}
+
+.repo-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: fit-content;
+    text-align: left;
+}
+
+.repo-input-container label {
+    font-size: 10px;
+    color: var(--primary-light);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-left: 2px;
+}
+
+.repo-input-container input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--bg);
+    font-size: 14px;
+    width: 220px;
+}
+
+.repo-input input::placeholder {
+    color: var(--primary-light);
+    opacity: 0.6;
+}
+
+.settings-button {
+    color: var(--primary-light);
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.settings-button:hover {
+    color: var(--bg);
+}
+
+/*#endregion */
+
+/*#region Main */
+.main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+
+    min-height: 0;
+
+    margin: 0 1rem 1rem 1rem;
+}
+
+.main .focused-commit {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    overflow-y: auto;
+}
+.main .commit-list {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+}
+.commit-list .commit:nth-child(even) {
+    background: var(--page-bg);
+}
+
+/*#region commit template */
+.commit {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.commit:hover {
+    background: var(--grey) !important;
+    scale: 1.01;
+}
+
+.commit-pi-chart {
+    position: relative;
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--page-bg);
+    align-self: center;
+}
+
+.commit-pi-chart-hitlayer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.commit-pi-chart .commit-pi-chart-center {
+    position: relative;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--bg);
+    left: 5px;
+    top: 5px;
+    pointer-events: none;
+}
+
+.commit-pi-chart-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    background: var(--tooltip-bg, #1a1a1a);
+    color: var(--tooltip-text, #fff);
+    font-size: 12px;
+    line-height: 1.4;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none; /* tooltip itself never intercepts hover */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+    z-index: 10;
+    overflow: clip !important;
+    z-index: 999;
+}
+
+.commit-pi-chart-tooltip.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+.commit-pi-chart-center-actions-status {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    left: 5px;
+    top: 5px;
+    pointer-events: none;
+    animation: pulse 1.5s infinite;
+}
+
+.commit-list .commit:nth-child(even) .commit-pi-chart {
+    background: var(--bg);
+}
+.commit-list .commit:nth-child(even) .commit-pi-chart .commit-pi-chart-center {
+    background: var(--page-bg);
+}
+
+.commit-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.commit-list-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.commit-list-item-title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.commit-list-item-date {
+    margin: 0;
+    font-size: 11px;
+    color: #8a887c;
+    white-space: nowrap;
+}
+
+.commit-list-item-body {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: var(--primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.commit-list-item-changes {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin-top: 4px;
+}
+.commit-list-item-line-changes-added {
+    color: var(--primary);
+}
+.commit-list-item-line-changes-removed {
+    color: var(--red);
+}
+
+/*#endregion */
+/*#endregion */
+
+/*#region Footer */
+.footer {
+    overflow-y: auto;
+    min-height: 0;
+}
+
+/*#endregion */
