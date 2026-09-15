@@ -3,6 +3,7 @@
     --primary: #5b7553;
     --primary-light: #a3b18a;
     --secondary: #a3b18a;
+    --tertiary: #c17f59;
     --border: #dad7cd;
     --bg: #f6f5f1;
     --page-bg: #eeece3;
@@ -173,12 +174,15 @@ body {
     margin: 0 1rem 1rem 1rem;
 }
 
+.main .focused-commit, .commit-list {
+    max-width: 1fr;
+}
+
 .main .focused-commit {
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 18px;
-    overflow-y: auto;
 }
 
 .main .commit-list {
@@ -194,6 +198,174 @@ body {
 .commit-list .commit:nth-child(even) {
     background: var(--page-bg);
 }
+
+/*#region commit focus */
+/*#region commit focus workflow */
+
+.commit-focused-workflow-status:last-child {
+    border-radius: 0 0 12px 12px;
+}
+
+.commit-focused-workflow-status:first-child {
+    border-radius: 12px 12px 0 0;
+}
+
+.commit-focused-workflow-status {
+    display: flex;
+    flex-direction: row;
+    justify-content: baseline;
+    align-items: center;
+    background-color: var(--secondary);
+    border-bottom: var(--border) 2px solid;
+    font-weight: 500;
+    gap: 1rem;
+    padding: 0.25rem;
+    transition: all 0.1s ease-in;
+    cursor: pointer;
+}
+
+.commit-focused-workflow-status:hover {
+    scale: 1.01;
+    background-color: var(--tertiary);
+    font-weight: 800;
+}
+
+.commit-focused-workflow-status__indicator {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+}
+
+/*#regionend */
+
+.focused-commit-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.focused-commit-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.focused-commit-pi-chart {
+    position: relative;
+    flex-shrink: 0;
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: var(--page-bg);
+}
+
+.focused-commit-pi-chart-hitlayer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.focused-commit-pi-chart-center {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--bg);
+    left: 10px;
+    top: 10px;
+    pointer-events: none;
+}
+
+.focused-commit-header-text {
+    min-width: 0;
+    flex: 1;
+}
+
+.focused-commit-text {
+    font-weight: 400;
+    font-size: 14px;
+}
+
+.focused-committer {
+    display: flex;
+    flex-direction: row;
+}
+
+.focused-committer-image {
+    width: 44px;
+    height: 44px;
+    align-self: center;
+    border-radius: 50%;
+    margin: 2px;
+}
+
+.focused-commiter-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.focused-commit-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.focused-commiter-name-box {
+    font-size: 12px;
+}
+
+.focused-commiter-name {
+    font-size: 10px;
+}
+
+.focused-commit-meta {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    top: 0;
+    margin-bottom: auto;
+}
+
+.focused-commit-meta-sha {
+    font-size: 11px;
+    color: var(--aqua);
+    margin-top: 2px;
+}
+
+.focused-commit-meta-date {
+    font-size: 11px;
+    color: #8a887c;
+    margin-top: 2px;
+}
+
+.focused-commit-stats {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--primary);
+}
+
+.focused-commit-changes-added {
+    color: var(--primary);
+}
+
+.focused-commit-changes-removed {
+    color: var(--red);
+}
+
+.focused-commit-files {
+    color: #8a887c;
+}
+
+/*#endregion */
 
 /*#region commit template */
 .commit {

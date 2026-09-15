@@ -76,7 +76,7 @@ const commitTemplate = document.getElementById("commit-list-template");
 var commitItems = new Array();
 
 class Commit {
-  constructor(sha, title, date, linesAdded, linesDeleted, filesChanged, languageBreakdown, actionsStatus, committerIconUrl, commitUrl) {
+  constructor(sha, title, date, linesAdded, linesDeleted, filesChanged, languageBreakdown, actionsStatus, committerIconUrl, committerName, commitUrl) {
     this.sha = sha;
     this.title = title;
     this.date = date;
@@ -86,11 +86,30 @@ class Commit {
     this.languageBreakdown = languageBreakdown;
     this.actionsStatus = actionsStatus;
     this.committerIconUrl = committerIconUrl;
+    this.committerName = committerName;
     this.commitUrl = commitUrl;
+    this.actionStatuses = {}
   }
 
   updateActionsStatus(newStatus) {
     this.actionsStatus = newStatus;
+  }
+
+  async getActionsStatus() {
+    const [owner, repo] = getRepoInfo()
+    const ciData = await api.getCIStatus(owner, repo, this.sha)
+
+    for (const checkRun of ciData["check_runs"]) {
+      let complete = true;
+      let failed = false;
+      if (["queued", "in_progress", "waiting", "requested", "pending"].includes(checkRun["status"])) {
+        complete = false;
+      }
+      if (checkRun["status"] === "completed" && ["failure", "timed_out", "cancelled", "action_required"].includes(checkRun["conclusion"])) {
+        failed = true;
+      }
+      this.actionStatuses[checkRun["name"]] = [failed ? "red" : (complete ? "green" : "yellow"), checkRun["details_url"]];
+    }
   }
 
   usableUrl() {
@@ -123,11 +142,13 @@ const EXTENSION_TO_LANGUAGE = Object.entries(LANGUAGE_EXTENSIONS).reduce((map, [
 function makeConicGradient(data, options = {}) {
   const { position = 'center', from = '0deg' } = options;
 
-  const entries = Object.entries(data);
+  const entries = Object.entries(data || {});
   const total = entries.reduce((sum, [, v]) => sum + v, 0);
 
-  if (total <= 0) {
-    throw new Error('Proportions must sum to a positive number.');
+  if (entries.length === 0 || total <= 0) {
+    // Fall back to a neutral "unknown" wedge instead of throwing, so a
+    // commit with no usable file/language data still renders.
+    return makeConicGradient({ unknown: 1 }, options);
   }
 
   let cumulative = 0;
@@ -234,10 +255,10 @@ function renderPiChart(container, data, options = {}) {
 }
 
 function GFG(str, maxLength, suffix = '...') {
-    if (str.length > maxLength) {
-        return str.substring(0, maxLength) + suffix;
-    }
-    return str;
+  if (str.length > maxLength) {
+    return str.substring(0, maxLength) + suffix;
+  }
+  return str;
 }
 
 function addCommit(sha, title, date, linesAdded, linesDeleted, filesChanged, languageBreakdown, actionsStatus, committerIconUrl, url) {
@@ -260,6 +281,10 @@ function addCommit(sha, title, date, linesAdded, linesDeleted, filesChanged, lan
   chartEl.appendChild(tooltip);
 
   buildHitLayer(svg, segments, total, tooltip);
+
+  const commitEl = clone.querySelector(".commit");
+  commitEl.dataset.sha = sha;
+  commitEl.addEventListener("click", () => selectCommit(getCommitBySha(sha)));
 
   clone.querySelector(".commit-list-item-title").textContent = GFG(title, 50, "...");
   clone.querySelector(".commit-list-item-date").textContent = date;
@@ -284,11 +309,26 @@ function formatDate(dateString) {
 
 function fileToLang(files) {
   const langMap = {};
+
+  if (!files || files.length === 0) {
+    // Merge commits / large diffs can come back with no files array at all
+    return { unknown: 1 };
+  }
+
   for (const file of files) {
     const ext = '.' + (file.filename.split('.').pop() || '');
     const lang = EXTENSION_TO_LANGUAGE[ext] || 'unknown';
-    langMap[lang] = (langMap[lang] || 0) + file["additions"] + file["deletions"];
+    const additions = Number(file["additions"]) || 0;
+    const deletions = Number(file["deletions"]) || 0;
+    langMap[lang] = (langMap[lang] || 0) + additions + deletions;
   }
+
+  const total = Object.values(langMap).reduce((sum, value) => sum + value, 0);
+  if (total === 0) {
+    // All changes had 0 additions/deletions (e.g. mode-only or binary changes)
+    return { unknown: 1 };
+  }
+
   return langMapToLangBreakdown(langMap);
 }
 
@@ -301,19 +341,64 @@ function langMapToLangBreakdown(langMap) {
   return breakdown;
 }
 
+// Computes the traffic-light status ("red" | "yellow" | "green") for a single
+// commit's CI checks. Shared by getCommits (initial load) and updateAllCommits
+// (periodic refresh of still-pending commits).
+async function getCiStatusForCommit(owner, repo, sha) {
+  const ciData = await api.getCIStatus(owner, repo, sha);
+  let complete = true;
+  let failed = false;
+  for (const checkRun of ciData["check_runs"]) {
+    if (["queued", "in_progress", "waiting", "requested", "pending"].includes(checkRun["status"])) {
+      complete = false;
+    }
+    if (checkRun["status"] === "completed" && ["failure", "timed_out", "cancelled", "action_required"].includes(checkRun["conclusion"])) {
+      failed = true;
+    }
+    // console.log(`Check run ${checkRun["name"]} for commit ${sha}: status=${checkRun["status"]}, conclusion=${checkRun["conclusion"]}`);
+  }
+  return failed ? "red" : (complete ? "green" : "yellow");
+}
+
 async function getCommits() {
-  const commits = await api.getCommits(getRepoInfo()[0], getRepoInfo()[1]);
+  const [owner, repo] = getRepoInfo();
+  const commits = await api.getCommits(owner, repo);
   for (const commit_obj of commits) {
     const sha = commit_obj["sha"];
-    const commit = await api.getCommit(getRepoInfo()[0], getRepoInfo()[1], sha);
-    createCommit(commit["sha"], commit["commit"]["message"], formatDate(commit["commit"]["author"]["date"]), commit["stats"]["additions"], commit["stats"]["deletions"], commit["files"].length, fileToLang(commit["files"]), "yellow", commit["author"]["avatar_url"], commit["commit"]["url"]);
-    addCommit(commit["sha"], commit["commit"]["message"], formatDate(commit["commit"]["author"]["date"]), commit["stats"]["additions"], commit["stats"]["deletions"], commit["files"].length, fileToLang(commit["files"]), "yellow", commit["author"]["avatar_url"], commit["commit"]["url"]);
-    console.log(`Commit ${commit["sha"]} added to commitItems.`);
+    const commitData = await api.getCommit(owner, repo, sha);
+    const files = commitData["files"] || [];
+
+    // Fetch CI status while building the commit so it's created with the
+    // correct status right away, instead of defaulting to "yellow".
+    const actionsStatus = await getCiStatusForCommit(owner, repo, sha);
+
+    const commit = createCommit(
+      commitData["sha"],
+      commitData["commit"]["message"],
+      formatDate(commitData["commit"]["author"]["date"]),
+      commitData["stats"]["additions"],
+      commitData["stats"]["deletions"],
+      files.length,
+      fileToLang(files),
+      actionsStatus,
+      commitData["author"]["avatar_url"],
+      commitData["commit"]["author"]["name"],
+      commitData["commit"]["url"]
+    );
+
+    // console.log(`Commit ${commit.sha} added to commitItems.`);
+    addCommit(commit.sha, commit.title, commit.date, commit.linesAdded, commit.linesDeleted, commit.filesChanged, commit.languageBreakdown, commit.actionsStatus, commit.committerIconUrl, commit.usableUrl());
+    // console.log(`Commit ${commit.sha} added to screen.`);
   }
 }
 
-function createCommit(sha, title, date, linesAdded, linesDeleted, filesChanged, languageBreakdown, actionsStatus, committerIconUrl, Url) {
-  const commit = new Commit(sha, title, date, linesAdded, linesDeleted, filesChanged, languageBreakdown, actionsStatus, committerIconUrl, Url);
+function sortCommits() {
+  commitItems.sort((a, b) => new Date(b.date) - new Date(a.date));
+  drawAllCommits();
+}
+
+function createCommit(sha, title, date, linesAdded, linesDeleted, filesChanged, languageBreakdown, actionsStatus, committerIconUrl, committerName, commitUrl) {
+  const commit = new Commit(sha, title, date, linesAdded, linesDeleted, filesChanged, languageBreakdown, actionsStatus, committerIconUrl, committerName, commitUrl);
   commitItems.push(commit);
   return commit;
 }
@@ -324,19 +409,8 @@ function clearCommits() {
 }
 
 async function updateCiData(commit) {
-  const ciData = await api.getCIStatus(getRepoInfo()[0], getRepoInfo()[1], commit.sha);
-  let complete = true;
-  let failed = false;
-  for (const checkRun of ciData["check_runs"]) {
-    if (["queued", "in_progress", "waiting", "requested", "pending"].includes(checkRun["status"])) {
-      complete = false;
-    }
-    if (checkRun["status"] === "completed" && ["failure", "timed_out", "cancelled", "action_required"].includes(checkRun["conclusion"])) {
-      failed = true;
-    }
-    console.log(`Check run ${checkRun["name"]} for commit ${commit.sha}: status=${checkRun["status"]}, conclusion=${checkRun["conclusion"]}`);
-  }
-  const status = failed ? "red" : (complete ? "green" : "yellow");
+  const [owner, repo] = getRepoInfo();
+  const status = await getCiStatusForCommit(owner, repo, commit.sha);
   commitItems.find(c => c.sha === commit.sha).updateActionsStatus(status);
 }
 
@@ -352,6 +426,10 @@ function drawAllCommits() {
   for (const commit of commitItems) {
     addCommit(commit.sha, commit.title, commit.date, commit.linesAdded, commit.linesDeleted, commit.filesChanged, commit.languageBreakdown, commit.actionsStatus, commit.committerIconUrl, commit.commitUrl);
   }
+}
+
+function getCommitBySha(sha) {
+  return commitItems.find(item => item.sha === sha);
 }
 
 function setCookie(name, value, days) {
@@ -376,18 +454,81 @@ function getCookie(name) {
   return null;
 }
 
+const focusedCommitContainer = document.getElementById("focused-commit");
+const focusedCommitTemplate = document.getElementById("focused-commit-template");
+const workflowStatusTemplate = document.getElementById("workflow-status");
+
+function addWorkflow(name, value, workflowStatusContainer, url) {
+  const clone = document.importNode(workflowStatusTemplate.content, true);
+  const wrapper = clone.querySelector(".commit-focused-workflow-status");
+
+  clone.querySelector(".commit-focused-workflow-status__indicator").style.backgroundColor = value;
+  clone.querySelector(".commit-focused-workflow-status__name").textContent = name;
+
+  wrapper.addEventListener("click", async () => {
+    window.open(url, '_blank');
+  })
+  workflowStatusContainer.appendChild(clone)
+}
+
+async function renderFocusedCommitWorkflows(commit, clone) {
+  clone.querySelector(".focused-commit-workflows").innerHTML = '';
+
+  await commit.getActionsStatus();
+  for (const [name, value] of Object.entries(commit.actionStatuses)) {
+    addWorkflow(name, value[0], clone.querySelector(".focused-commit-workflows"), value[1])
+  }
+}
+
+async function renderFocusedCommit(commit) {
+  focusedCommitContainer.innerHTML = '';
+  const clone = document.importNode(focusedCommitTemplate.content, true);
+
+  const chartEl = clone.querySelector(".focused-commit-pi-chart");
+  const { segments, total } = makeConicGradient(commit.languageBreakdown);
+  chartEl.style.background = makeConicGradient(commit.languageBreakdown).gradient;
+
+  const svg = clone.querySelector(".focused-commit-pi-chart-hitlayer");
+  const tooltip = document.createElement('span');
+  tooltip.className = 'commit-pi-chart-tooltip';
+  tooltip.setAttribute('role', 'tooltip');
+  chartEl.appendChild(tooltip);
+  buildHitLayer(svg, segments, total, tooltip);
+
+  clone.querySelector(".focused-commit-text").textContent = GFG(commit.title, 30, "...");
+  clone.querySelector(".focused-committer-image").src = commit.committerIconUrl;
+  clone.querySelector(".focused-commit-meta-sha").textContent = GFG(commit.sha, 7, "");
+  clone.querySelector(".focused-commit-meta-date").textContent = commit.date;
+  clone.querySelector(".focused-commiter-name").textContent = commit.committerName;
+  clone.querySelector(".focused-commit-changes-added").textContent = commit.linesAdded;
+  clone.querySelector(".focused-commit-changes-removed").textContent = commit.linesDeleted;
+  clone.querySelector(".focused-commit-files").textContent = `${commit.filesChanged} files changed`;
+
+  await renderFocusedCommitWorkflows(commit, clone)
+  focusedCommitContainer.appendChild(clone);
+}
+
+async function selectCommit(commit) {
+  await renderFocusedCommit(commit);
+}
+
+Array.from(document.getElementsByClassName("commit")).forEach(element => {
+  element.addEventListener("click", async () => {
+    sha = element.aria_id
+    selectCommit(getCommitBySha(sha))
+  })
+});
+
 document.getElementById("repo-input-button").addEventListener("click", async () => {
   clearCommits();
   setCookie("repo_input", document.getElementById("repo_input").value, 7);
   try {
     await api.checkGithubKey();
     await getCommits();
-    await updateAllCommits();
-    console.log('About to draw', commitItems.length);
-    drawAllCommits();
-    console.log('Finished drawing', commitItems.length);
+    sortCommits();
+    // console.log('Finished drawing', commitItems.length);
   } catch (error) {
-    console.error("Error fetching commits:", error);
+    // console.error("Error fetching commits:", error);
     alert("Error fetching commits. Please check the repository and your GitHub key.");
   }
 });

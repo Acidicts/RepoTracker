@@ -16,6 +16,13 @@
 </head>
 
 <body>
+    <template id="workflow-status">
+        <div class="commit-focused-workflow-status">
+            <div class="commit-focused-workflow-status__indicator"></div>
+            <div class="commit-focused-workflow-status__name"></div>
+        </div>
+    </template>
+    
     <template id="commit-list-template">
         <div class="commit">
             <div class="commit-pi-chart">
@@ -44,9 +51,43 @@
         </div>
     </template>
 
+    <template id="focused-commit-template">
+        <div class="focused-commit-content">
+            <div class="focused-commit-header">
+                <div class="focused-commit-pi-chart">
+                    <svg class="focused-commit-pi-chart-hitlayer" viewBox="0 0 34 34"></svg>
+                    <div class="focused-commit-pi-chart-center">
+                        <img class="focused-committer-image">
+                    </div>
+                </div>
+                <div class="focused-commit-header-text">
+                    <div class="focused-commit-meta">
+                        <div class="focused-commit-meta-sha"></div>
+                        <div class="focused-commit-meta-date"></div>
+                    </div>
+                    <div class="focused-committer">
+                        <div class="focused-commiter-name-box">By <span class="focused-commiter-name"></span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="focused-commit-stats">
+                <div class="focused-commit-changes">
+                    +<span class="focused-commit-changes-added"></span>
+                    -<span class="focused-commit-changes-removed"></span>
+                </div>
+                <div class="focused-commit-files"></div>
+            </div>
+            <div class="focused-commit-workflows" id="focused-commit-workflows">
+            </div> 
+            <div class="focused-commit-header-body">
+                <div class="focused-commit-text"></div>
+            </div>
+        </div>
+    </template>
+
     <dialog id="settings-modal">
         <h2>Settings</h2>
-        <input type="text" id="github_key" placeholder="GitHub Personal Access Token"/>
+        <input type="text" id="github_key" placeholder="GitHub Personal Access Token" />
         <button id="save-settings" class="btn-primary">Save</button>
     </dialog>
 
@@ -55,7 +96,7 @@
             <button class="btn-primary repo-input-button" type="button" id="repo-input-button">Go</button>
             <div class="repo-input-container">
                 <label>Repo</label>
-                <input type="text" placeholder="Acidicts/RepoWatch" id="repo_input"/>
+                <input type="text" placeholder="Acidicts/RepoWatch" id="repo_input" />
             </div>
         </div>
         <div id="settings-button">
@@ -69,7 +110,7 @@
     </header>
 
     <main class="main">
-        <div class="focused-commit"></div>
+        <div class="focused-commit" id="focused-commit"></div>
         <div class="commit-list" id="commit-list"></div>
     </main>
 </body>
